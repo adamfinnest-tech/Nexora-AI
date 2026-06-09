@@ -1,0 +1,2 @@
+// ProtectedRoute component
+// Auth guard

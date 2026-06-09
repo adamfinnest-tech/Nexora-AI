@@ -1,0 +1,1 @@
+// ToolIndicator component

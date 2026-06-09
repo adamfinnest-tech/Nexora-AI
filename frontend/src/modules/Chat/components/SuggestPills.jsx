@@ -1,0 +1,1 @@
+// SuggestPills component

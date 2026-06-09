@@ -1,0 +1,1 @@
+// truncateText utility
