@@ -1,5 +1,6 @@
 const Chat = require('../models/Chat');
 const Brain = require('../models/Brain');
+const { extractAndSaveMemories } = require('../services/memoryExtractor');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { createReactAgent, ToolNode } = require('@langchain/langgraph/prebuilt');
 const { StateGraph, MessagesAnnotation } = require('@langchain/langgraph');
@@ -91,8 +92,8 @@ const setupTools = async (userId = 'default') => {
       } catch (e) { return "Failed to save memory: " + e.message; }
     }, {
       name: "create_memory",
-      description: "Save a new important fact about the user. Only use this when the user reveals a persistent fact that should be remembered.",
-      schema: z.object({ fact: z.string().describe("The fact to remember (e.g., 'User lives in Kerala')") })
+      description: "MANDATORY: You MUST call this tool whenever the user tells you their name, company, location, or any personal fact. If you do not call this tool, the fact will be lost forever. Call this tool to save the fact to the database.",
+      schema: z.object({ fact: z.string().describe("The fact to remember (e.g., 'User name is Adam', 'Company is Fornax Gaming')") })
     }));
 
     tools.push(tool(async ({ memoryId, fact }) => {
@@ -189,6 +190,11 @@ const addMessage = async (req, res) => {
 
     // Load Long-Term Brain Memories
     const targetUserId = chat.userId || req.user?._id;
+    
+    // NEW: Automatic Memory Extraction Pipeline
+    // This runs before generating the AI response to ensure the current message's facts are instantly available.
+    await extractAndSaveMemories(targetUserId, content);
+
     const memories = await Brain.find({ userId: targetUserId });
     let memoryContext = "You currently have no saved memories about this user.";
     if (memories.length > 0) {
@@ -248,7 +254,7 @@ You can include multiple XML blocks if necessary, but they MUST be at the end. D
 If you have tools available, use them to find real-time information or interact with external services when asked.
 
 CRITICAL INSTRUCTION FOR LONG-TERM MEMORY:
-Below are the important facts you have previously remembered about this user. Use these facts to personalize your responses. If the user tells you a new important fact (e.g., their name, where they live, their preferences), use the create_memory tool to save it so you don't forget it in future sessions. If a fact changes, use the update_memory tool. You can reference the memory IDs to update or delete them.
+Below are the important facts about this user that have been saved to your permanent memory. Use these facts to heavily personalize your responses.
 
 USER MEMORIES:
 ${memoryContext}`;
