@@ -179,23 +179,21 @@ const LoginPage = () => {
                 </div>
 
                 {/* Social Login Options */}
-                <div className="mt-6">
-                  <div className="overflow-hidden rounded-2xl shadow-sm border border-gray-200/50 bg-white/50 hover:bg-white/80 transition-colors">
-                    <GoogleLogin
-                      onSuccess={async (credentialResponse) => {
-                        try {
-                          await loginWithGoogle(credentialResponse.credential);
-                          navigate('/');
-                        } catch (err) {
-                          setError(err.response?.data?.message || 'Google login failed');
-                        }
-                      }}
-                      onError={() => setError('Google login failed')}
-                      theme="outline"
-                      size="large"
-                      width="100%"
-                    />
-                  </div>
+                <div className="mt-6 flex justify-center w-full">
+                  <GoogleLogin
+                    onSuccess={async (credentialResponse) => {
+                      try {
+                        await loginWithGoogle(credentialResponse.credential);
+                        navigate('/');
+                      } catch (err) {
+                        setError(err.response?.data?.message || 'Google login failed');
+                      }
+                    }}
+                    onError={() => setError('Google login failed')}
+                    theme="outline"
+                    size="large"
+                    shape="pill"
+                  />
                 </div>
 
                 {/* Footer Links */}
