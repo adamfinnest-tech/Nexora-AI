@@ -52,7 +52,14 @@ const InputBar = ({ isListening, setIsListening, onSendMessage, disabled, onStop
             {disabled ? (
               <span className="text-[#8C52FF] font-medium text-[15px] animate-typing-loop">Waiting for response...</span>
             ) : (
-              <span className="text-gray-400 text-[15px] animate-typing-loop">Research a company, analyze a market, compare competitors, or generate business insights...</span>
+              <>
+                <div className="hidden md:block">
+                  <span className="text-gray-400 text-[15px] animate-typing-loop">Research a company, analyze a market, compare competitors, or generate insights...</span>
+                </div>
+                <div className="block md:hidden">
+                  <span className="text-gray-400 text-[15px] animate-typing-loop">Research a company or market...</span>
+                </div>
+              </>
             )}
           </div>
         )}
