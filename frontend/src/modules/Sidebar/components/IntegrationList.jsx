@@ -2,10 +2,39 @@ import React, { useState, useEffect } from 'react';
 import { Search, Loader2, CheckCircle2 } from 'lucide-react';
 import googleCalendarIcon from '../../../assets/google-calendar-svgrepo-com.svg';
 import gmailIcon from '../../../assets/gmail-svgrepo-com.svg';
+import DisconnectPopup from './DisconnectPopup';
+import Notification from '../../../components/Notification';
 
 const IntegrationList = () => {
   const [loadingApp, setLoadingApp] = useState(null);
   const [connectedApps, setConnectedApps] = useState([]);
+  const [popupApp, setPopupApp] = useState(null);
+  const [notification, setNotification] = useState({ isVisible: false, message: '', type: 'success' });
+
+  const handleItemClick = (appName) => {
+    if (connectedApps.includes(appName)) {
+      setPopupApp(appName);
+    } else {
+      handleConnect(appName);
+    }
+  };
+
+  const handleDisconnect = async (appName) => {
+    try {
+      const token = localStorage.getItem('token');
+      // Optimistically update the UI to show it's disconnected
+      setConnectedApps(prev => prev.filter(app => app !== appName));
+      
+      const displayName = appName === 'gmail' ? 'Gmail' : appName === 'googlecalendar' ? 'Google Calendar' : appName;
+      setNotification({ isVisible: true, message: `${displayName} disconnected successfully`, type: 'success' });
+
+      // If you have a backend endpoint for this, you would call it here:
+      // await fetch('http://localhost:5000/api/integrations/disconnect', { ... })
+    } catch (err) {
+      console.error('Failed to disconnect', err);
+      setNotification({ isVisible: true, message: 'Failed to disconnect', type: 'error' });
+    }
+  };
 
   useEffect(() => {
     const fetchConnections = async () => {
@@ -43,11 +72,17 @@ const IntegrationList = () => {
 
       const data = await res.json();
       if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
+        const displayName = appName === 'gmail' ? 'Gmail' : appName === 'googlecalendar' ? 'Google Calendar' : appName;
+        setNotification({ isVisible: true, message: `Connecting to ${displayName}...`, type: 'info' });
+        
+        // Brief delay so the user can see the notification before the page redirects
+        setTimeout(() => {
+          window.location.href = data.redirectUrl;
+        }, 1000);
       }
     } catch (error) {
       console.error('Connection error:', error);
-      alert('Could not initiate connection. Please try again.');
+      setNotification({ isVisible: true, message: 'Could not initiate connection. Please try again.', type: 'error' });
     } finally {
       setLoadingApp(null);
     }
@@ -69,7 +104,7 @@ const IntegrationList = () => {
 
         <div className="px-2">
           <div 
-            onClick={() => handleConnect('gmail')}
+            onClick={() => handleItemClick('gmail')}
             className="flex items-center gap-3 py-2 px-3 cursor-pointer hover:bg-white/30 rounded-xl transition-colors border-b border-black/5"
           >
             <div className="w-9 h-9 flex items-center justify-center shrink-0 relative">
@@ -91,7 +126,7 @@ const IntegrationList = () => {
 
         <div className="px-2">
           <div 
-            onClick={() => handleConnect('googlecalendar')}
+            onClick={() => handleItemClick('googlecalendar')}
             className="flex items-center gap-3 py-2 px-3 cursor-pointer hover:bg-white/30 rounded-xl transition-colors"
           >
             <div className="w-9 h-9 flex items-center justify-center shrink-0">
@@ -112,6 +147,20 @@ const IntegrationList = () => {
         </div>
 
       </div>
+
+      <DisconnectPopup 
+        isOpen={!!popupApp} 
+        onClose={() => setPopupApp(null)} 
+        onDisconnect={handleDisconnect} 
+        appName={popupApp} 
+      />
+
+      <Notification 
+        isVisible={notification.isVisible}
+        message={notification.message}
+        type={notification.type}
+        onClose={() => setNotification(prev => ({ ...prev, isVisible: false }))}
+      />
     </div>
   );
 };
