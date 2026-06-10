@@ -81,7 +81,7 @@ const AiMessageContainer = ({ msg }) => {
       {/* Content area */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3 md:gap-5 items-start max-w-[calc(100%-2.25rem)] md:max-w-[calc(100%-3.5rem)] w-full">
         <div className="flex flex-col items-start gap-1">
-          <div ref={contentRef} className="w-full bg-white/40 p-4 rounded-[18px]">
+          <div ref={contentRef} className="w-full bg-white/40 p-4 rounded-[34px]">
             <EnhancedMessageRenderer content={msg.content} />
           </div>
           <div className="flex items-center gap-1 ml-2">

@@ -3,6 +3,7 @@ import ChatHeader from './components/ChatHeader';
 import ChatWindow from './components/ChatWindow';
 import InputBar from './components/InputBar';
 import { useFetch } from '../../hooks/useFetch';
+import { baseURL } from '../../services/api';
 
 const Chat = ({ currentChatId, onChatCreated, onMenuClick }) => {
   const [isListening, setIsListening] = useState(false);
@@ -12,6 +13,7 @@ const Chat = ({ currentChatId, onChatCreated, onMenuClick }) => {
   
   const abortControllerRef = useRef(null);
   const statusIntervalRef = useRef(null);
+  const creatingChatIdRef = useRef(null);
 
   const clearStatusInterval = () => {
     if (statusIntervalRef.current) {
@@ -31,8 +33,14 @@ const Chat = ({ currentChatId, onChatCreated, onMenuClick }) => {
   );
 
   useEffect(() => {
-    if (chatData) {
-      setMessages(chatData.messages || []);
+    if (chatData && chatData._id === currentChatId) {
+      if (creatingChatIdRef.current === chatData._id) {
+        // This is the first fetch for the newly created chat.
+        // Ignore it to prevent overwriting optimistic messages with an empty array.
+        creatingChatIdRef.current = null;
+      } else {
+        setMessages(chatData.messages || []);
+      }
     } else if (!currentChatId) {
       setMessages([]);
     }
@@ -40,9 +48,13 @@ const Chat = ({ currentChatId, onChatCreated, onMenuClick }) => {
 
   useEffect(() => {
     if (chatError) {
-      setMessages([{ role: 'ai', content: '⚠️ Failed to load chat history.', _id: 'error' }]);
+      if (creatingChatIdRef.current === currentChatId) {
+        creatingChatIdRef.current = null;
+      } else {
+        setMessages([{ role: 'ai', content: '⚠️ Failed to load chat history.', _id: 'error' }]);
+      }
     }
-  }, [chatError]);
+  }, [chatError, currentChatId]);
 
   const handleStop = () => {
     if (abortControllerRef.current) {
@@ -69,7 +81,7 @@ const Chat = ({ currentChatId, onChatCreated, onMenuClick }) => {
       // If no chat session exists, create one
       let chatId = currentChatId;
       if (!chatId) {
-        const createRes = await fetch('http://localhost:5000/api/chat', {
+        const createRes = await fetch(`${baseURL}/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -80,11 +92,12 @@ const Chat = ({ currentChatId, onChatCreated, onMenuClick }) => {
         });
         const chatData = await createRes.json();
         chatId = chatData._id;
+        creatingChatIdRef.current = chatId;
         if (onChatCreated) onChatCreated(chatId);
       }
 
       // Send the message and read stream
-      const response = await fetch(`http://localhost:5000/api/chat/${chatId}/message`, {
+      const response = await fetch(`${baseURL}/chat/${chatId}/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

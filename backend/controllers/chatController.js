@@ -79,6 +79,9 @@ const createTavilyTool = () => {
   });
 };
 
+// Cache for Composio tools to prevent API call latency on every message
+const composioToolsCache = new Map();
+
 // Helper to set up tools
 const setupTools = async (userId = 'default') => {
   const tools = [];
@@ -140,13 +143,21 @@ const setupTools = async (userId = 'default') => {
 
   if (process.env.COMPOSIO_API_KEY && process.env.COMPOSIO_API_KEY.trim() !== '') {
     try {
-      const composio = new Composio({
-        apiKey: process.env.COMPOSIO_API_KEY,
-        provider: new LangchainProvider()
-      });
-      // Get commonly used assistant tools
-      const composioTools = await composio.tools.get(userId, { toolkits: ["gmail", "googlecalendar"] });
-      tools.push(...composioTools);
+      const cacheKey = `${userId}-composio-tools`;
+      if (composioToolsCache.has(cacheKey)) {
+        tools.push(...composioToolsCache.get(cacheKey));
+      } else {
+        const composio = new Composio({
+          apiKey: process.env.COMPOSIO_API_KEY,
+          provider: new LangchainProvider()
+        });
+        // Get commonly used assistant tools
+        const composioTools = await composio.tools.get(userId, { toolkits: ["gmail", "googlecalendar"] });
+        composioToolsCache.set(cacheKey, composioTools);
+        // Expire cache after 1 hour
+        setTimeout(() => composioToolsCache.delete(cacheKey), 60 * 60 * 1000);
+        tools.push(...composioTools);
+      }
     } catch (e) {
       console.error("Failed to initialize Composio tools:", e.message || e);
     }
@@ -170,9 +181,9 @@ const addMessage = async (req, res) => {
     if (chat.messages.length === 1 && chat.title === 'New Chat') {
       chat.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
     }
-    await chat.save();
+    await chat.save(); // Must await: the final save at the end depends on this completing first
 
-    // Setup SSE headers
+    // Setup SSE headers immediately so the connection is open while we do prep work
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -191,11 +202,15 @@ const addMessage = async (req, res) => {
     // Load Long-Term Brain Memories
     const targetUserId = chat.userId || req.user?._id;
     
-    // NEW: Automatic Memory Extraction Pipeline
-    // This runs before generating the AI response to ensure the current message's facts are instantly available.
-    await extractAndSaveMemories(targetUserId, content);
+    // Fire-and-forget: memory extraction runs in background, doesn't block the stream
+    extractAndSaveMemories(targetUserId, content).catch(e => console.error("Memory Extraction Error:", e));
 
-    const memories = await Brain.find({ userId: targetUserId });
+    // OPTIMIZATION: Run memories fetch and tool setup IN PARALLEL — they are fully independent
+    const [memories, tools] = await Promise.all([
+      Brain.find({ userId: targetUserId }),
+      setupTools(req.user?._id?.toString() || 'default')
+    ]);
+
     let memoryContext = "You currently have no saved memories about this user.";
     if (memories.length > 0) {
       memoryContext = memories.map(m => `ID=${m._id}: ${m.fact}`).join("\n");
@@ -208,8 +223,6 @@ const addMessage = async (req, res) => {
       streaming: true,
       maxRetries: 0, // Disable internal retries to prevent UI from hanging for 60 seconds on rate limit
     });
-
-    const tools = await setupTools(req.user?._id?.toString() || 'default');
 
     const systemPrompt = `You are a highly capable Executive Business Analyst named Nexora AI.
 You provide concise, professional, and well-formatted answers using Markdown.

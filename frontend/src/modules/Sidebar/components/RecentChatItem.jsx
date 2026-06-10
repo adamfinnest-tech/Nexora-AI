@@ -6,7 +6,7 @@ const RecentChatItem = ({ icon, title, isLast, isActive, onClick, onDelete }) =>
     <div className="px-2">
       <div 
         onClick={onClick}
-        className={`group flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-white/40 rounded-xl transition-colors ${!isLast ? 'border-b border-black/5' : ''} ${isActive ? 'bg-white/60 shadow-sm' : ''}`}
+        className={`group flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-white/40 rounded-[2rem] transition-colors ${!isLast ? 'border-b border-black/5' : ''} ${isActive ? 'bg-white/60 shadow-sm' : ''}`}
       >
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="w-9 h-9 flex items-center justify-center bg-transparent shrink-0">

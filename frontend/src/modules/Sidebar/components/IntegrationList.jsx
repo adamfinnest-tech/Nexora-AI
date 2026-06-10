@@ -4,6 +4,7 @@ import googleCalendarIcon from '../../../assets/google-calendar-svgrepo-com.svg'
 import gmailIcon from '../../../assets/gmail-svgrepo-com.svg';
 import DisconnectPopup from './DisconnectPopup';
 import Notification from '../../../components/Notification';
+import { baseURL } from '../../../services/api';
 
 const IntegrationList = () => {
   const [loadingApp, setLoadingApp] = useState(null);
@@ -29,7 +30,7 @@ const IntegrationList = () => {
       setNotification({ isVisible: true, message: `${displayName} disconnected successfully`, type: 'success' });
 
       // If you have a backend endpoint for this, you would call it here:
-      // await fetch('http://localhost:5000/api/integrations/disconnect', { ... })
+      // await fetch(`${baseURL}/integrations/disconnect`, { ... })
     } catch (err) {
       console.error('Failed to disconnect', err);
       setNotification({ isVisible: true, message: 'Failed to disconnect', type: 'error' });
@@ -41,7 +42,7 @@ const IntegrationList = () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const res = await fetch('http://localhost:5000/api/integrations', {
+        const res = await fetch(`${baseURL}/integrations`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -59,7 +60,7 @@ const IntegrationList = () => {
     try {
       setLoadingApp(appName);
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/integrations/connect', {
+      const res = await fetch(`${baseURL}/integrations/connect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +106,7 @@ const IntegrationList = () => {
         <div className="px-2">
           <div 
             onClick={() => handleItemClick('gmail')}
-            className="flex items-center gap-3 py-2 px-3 cursor-pointer hover:bg-white/30 rounded-xl transition-colors border-b border-black/5"
+            className="flex items-center gap-3 py-2 px-3 cursor-pointer hover:bg-white/30 rounded-[2rem] transition-colors border-b border-black/5"
           >
             <div className="w-9 h-9 flex items-center justify-center shrink-0 relative">
               {loadingApp === 'gmail' ? (
@@ -127,7 +128,7 @@ const IntegrationList = () => {
         <div className="px-2">
           <div 
             onClick={() => handleItemClick('googlecalendar')}
-            className="flex items-center gap-3 py-2 px-3 cursor-pointer hover:bg-white/30 rounded-xl transition-colors"
+            className="flex items-center gap-3 py-2 px-3 cursor-pointer hover:bg-white/30 rounded-[2rem] transition-colors"
           >
             <div className="w-9 h-9 flex items-center justify-center shrink-0">
               {loadingApp === 'googlecalendar' ? (
