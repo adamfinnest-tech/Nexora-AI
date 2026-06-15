@@ -719,3 +719,4 @@ const deleteChat = async (req, res) => {
 };
 
 module.exports = { createChat, getChats, getChatById, addMessage, deleteChat };
+

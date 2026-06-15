@@ -16,6 +16,7 @@ export const CompanyOverviewCard = ({ data }) => {
         <div><strong className="text-gray-900 block mb-1 text-xs uppercase tracking-wider text-gray-500">Website</strong>{data.website ? <a href={`https://${data.website.replace(/^https?:\/\//, '')}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{data.website}</a> : 'N/A'}</div>
         <div className="sm:col-span-2"><strong className="text-gray-900 block mb-1 text-xs uppercase tracking-wider text-gray-500">Key Products/Services</strong>{data.products || 'N/A'}</div>
       </div>
+      
     </div>
   );
 };

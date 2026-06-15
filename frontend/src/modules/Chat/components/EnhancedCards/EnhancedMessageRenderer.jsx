@@ -170,6 +170,7 @@ const EnhancedMessageRenderer = ({ content, isStreaming = false, onSendMessage }
   }, [content]);
 
   return (
+    
     <div className="flex flex-col w-full gap-3">
       {/* 1. Enhanced UI Cards (Rendered above the text) */}
       <div className="flex flex-col gap-3 ml-2 mr-2">
