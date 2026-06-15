@@ -104,13 +104,28 @@ const EnhancedMessageRenderer = ({ content, isStreaming = false, onSendMessage }
     }
 
     // Parse Comparison
-    const comparisonItems = extractItems(xmlSection, 'comparison', 'item');
-    if (comparisonItems.length > 0) {
-      data.comparison = comparisonItems.map(itemStr => ({
-        feature: extractTag(itemStr, 'feature'),
-        entity1: extractTag(itemStr, 'entity1'),
-        entity2: extractTag(itemStr, 'entity2')
-      }));
+    const comparisonContent = extractTag(xmlSection, 'comparison');
+    if (comparisonContent) {
+      const headerStr = extractTag(comparisonContent, 'header');
+      const comparisonItems = [];
+      const itemRegex = /<item>([\/\s\S]*?)<\/item>/gi;
+      let itemMatch;
+      while ((itemMatch = itemRegex.exec(comparisonContent)) !== null) {
+        comparisonItems.push(itemMatch[1].trim());
+      }
+      if (comparisonItems.length > 0) {
+        data.comparison = comparisonItems.map(itemStr => ({
+          feature: extractTag(itemStr, 'feature'),
+          entity1: extractTag(itemStr, 'entity1'),
+          entity2: extractTag(itemStr, 'entity2')
+        }));
+        if (headerStr) {
+          data.comparisonHeader = {
+            entity1: extractTag(headerStr, 'entity1'),
+            entity2: extractTag(headerStr, 'entity2')
+          };
+        }
+      }
     }
 
     // Parse Market Metrics
@@ -162,7 +177,7 @@ const EnhancedMessageRenderer = ({ content, isStreaming = false, onSendMessage }
         {parsedData.contact && <CompanyContactCard data={parsedData.contact} />}
         {parsedData.company && <CompanyOverviewCard data={parsedData.company} />}
         {parsedData.swot && <SWOTCard data={parsedData.swot} />}
-        {parsedData.comparison && <ComparisonTable data={parsedData.comparison} />}
+        {parsedData.comparison && <ComparisonTable data={parsedData.comparison} header={parsedData.comparisonHeader} />}
         {parsedData.market && <MarketMetricsCard data={parsedData.market} />}
       </div>
 

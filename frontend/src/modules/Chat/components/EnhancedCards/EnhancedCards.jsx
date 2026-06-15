@@ -62,33 +62,71 @@ export const SWOTCard = ({ data }) => {
   );
 };
 
-export const ComparisonTable = ({ data }) => {
+export const ComparisonTable = ({ data, header }) => {
   if (!data || !Array.isArray(data) || data.length === 0) return null;
+
+  const name1 = header?.entity1 || 'Company A';
+  const name2 = header?.entity2 || 'Company B';
+
   return (
-    <div className="mt-4 bg-white/60 backdrop-blur-md border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-        <BarChart2 className="w-5 h-5 text-orange-600" />
-        <h4 className="font-semibold text-gray-800 m-0">Comparison</h4>
+    <div className="mt-4 rounded-2xl overflow-hidden shadow-md border border-gray-200/80 bg-white/70 backdrop-blur-md">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 px-5 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <BarChart2 className="w-5 h-5 text-white/80 shrink-0" />
+            <h4 className="font-bold text-white text-base tracking-wide m-0">Head-to-Head Comparison</h4>
+          </div>
+          <div className="flex items-center gap-2 text-sm font-semibold shrink-0">
+            <span className="bg-white/20 text-white px-3 py-1 rounded-full border border-white/30 backdrop-blur-sm max-w-[140px] truncate" title={name1}>{name1}</span>
+            <span className="bg-white text-purple-700 px-2 py-0.5 rounded-full text-xs font-black shadow">VS</span>
+            <span className="bg-white/20 text-white px-3 py-1 rounded-full border border-white/30 backdrop-blur-sm max-w-[140px] truncate" title={name2}>{name2}</span>
+          </div>
+        </div>
       </div>
+
+      {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-700">
-          <thead className="text-xs text-gray-600 uppercase bg-gray-50/50 border-b border-gray-200">
-            <tr>
-              <th scope="col" className="px-4 py-3 font-semibold">Feature / Criteria</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Entity 1</th>
-              <th scope="col" className="px-4 py-3 font-semibold">Entity 2</th>
+        <table className="w-full text-sm">
+          {/* Column headers */}
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-50/80 w-1/4">
+                Category
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-violet-600 bg-violet-50/60 w-[37.5%]">
+                {name1}
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50/60 w-[37.5%]">
+                {name2}
+              </th>
             </tr>
           </thead>
           <tbody>
             {data.map((item, idx) => (
-              <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/50">
-                <td className="px-4 py-3 font-medium text-gray-900">{item.feature}</td>
-                <td className="px-4 py-3">{item.entity1}</td>
-                <td className="px-4 py-3">{item.entity2}</td>
+              <tr
+                key={idx}
+                className={`border-b border-gray-100 transition-colors hover:bg-purple-50/30 ${idx % 2 === 0 ? 'bg-white/60' : 'bg-gray-50/40'}`}
+              >
+                <td className="px-5 py-3.5 font-semibold text-gray-800 text-xs uppercase tracking-wide align-top">
+                  {item.feature}
+                </td>
+                <td className="px-5 py-3.5 text-gray-700 align-top leading-relaxed border-l border-violet-100/60">
+                  {item.entity1 || <span className="text-gray-400 italic">N/A</span>}
+                </td>
+                <td className="px-5 py-3.5 text-gray-700 align-top leading-relaxed border-l border-indigo-100/60">
+                  {item.entity2 || <span className="text-gray-400 italic">N/A</span>}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-2.5 bg-gray-50/60 border-t border-gray-100 flex items-center justify-between">
+        <span className="text-xs text-gray-400">{data.length} criteria compared</span>
+        <span className="text-xs text-gray-400 font-medium">Nexora AI Intelligence</span>
       </div>
     </div>
   );
